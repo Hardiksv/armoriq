@@ -6,13 +6,13 @@ async function main() {
     where: { name: 'armoriq-custom-mcp' },
     update: {
       command: 'node',
-      args: ['C:/Users/hardi/Desktop/armoriq/custom-mcp-server/dist/index.js']
+      args: ['../custom-mcp-server/dist/index.js']
     },
     create: {
       name: 'armoriq-custom-mcp',
       type: 'stdio',
       command: 'node',
-      args: ['C:/Users/hardi/Desktop/armoriq/custom-mcp-server/dist/index.js']
+      args: ['../custom-mcp-server/dist/index.js']
     }
   });
   
