@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'https://armoriq-2l9h.onrender.com/api';
 
 interface AppState {
   rules: any[];
