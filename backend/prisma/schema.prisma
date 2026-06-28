@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Conversation {
+  id               String            @id @default(uuid())
+  title            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  messages         Message[]
+  budget           Budget?
+  pendingApprovals PendingApproval[]
+  auditLogs        AuditLog[]
+  toolExecutions   ToolExecution[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  role           String       // "user", "agent", "system", "tool"
+  content        String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Rule {
+  id          String   @id @default(uuid())
+  type        String   // "BLOCK", "APPROVAL", "VALIDATION"
+  targetTool  String   // specific tool name, e.g. "delete_file" or "*"
+  config      Json?    // e.g., { "arg": "path", "pattern": "^/sandbox/" }
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Budget {
+  id             String       @id @default(uuid())
+  conversationId String       @unique
+  maxTokens      Int
+  usedTokens     Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model PendingApproval {
+  id             String       @id @default(uuid())
+  conversationId String
+  toolName       String
+  args           Json
+  status         String       // "PENDING", "APPROVED", "REJECTED", "TIMEOUT", "FAILED_SERVER_RESTART"
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id             String        @id @default(uuid())
+  conversationId String?
+  action         String        // "TOOL_EXEC", "POLICY_BLOCK", "APPROVAL_REQUEST", "RULE_UPDATE"
+  toolName       String?
+  details        Json?
+  timestamp      DateTime      @default(now())
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+}
+
+model McpServerConfig {
+  id              String            @id @default(uuid())
+  name            String            @unique
+  type            String            // "stdio", "sse"
+  command         String?           // for stdio (e.g. "node")
+  args            Json?             // for stdio arguments (e.g. ["dist/index.js"])
+  url             String?           // for sse
+  isActive        Boolean           @default(true)
+  status          String            @default("DISCONNECTED") // "CONNECTED", "DISCONNECTED", "ERROR"
+  lastHealthCheck DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  discoveredTools DiscoveredTool[]
+}
+
+model DiscoveredTool {
+  id          String          @id @default(uuid())
+  serverId    String
+  name        String
+  description String?
+  inputSchema Json?
+  lastSeen    DateTime        @default(now())
+  server      McpServerConfig @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  
+  @@unique([serverId, name])
+}
+
+model ToolExecution {
+  id             String       @id @default(uuid())
+  conversationId String
+  toolName       String
+  args           Json
+  result         String?
+  status         String       // "SUCCESS", "ERROR", "BLOCKED_BY_POLICY"
+  executionTime  Int?         // in ms
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
