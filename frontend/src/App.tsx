@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from './store';
 import './socket';
 import { MessageSquare, ShieldAlert, Settings, Network, ScrollText, Play, CheckCircle, XCircle, Trash2 } from 'lucide-react';
@@ -57,7 +57,7 @@ export default function App() {
                 <tab.icon size={20} />
                 <span className="font-medium">{tab.label}</span>
               </div>
-              {tab.badge > 0 && (
+              {tab.badge && tab.badge > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
                   {tab.badge}
                 </span>
